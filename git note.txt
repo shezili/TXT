@@ -1,0 +1,145 @@
+1.在本地创建自己的仓库文件夹（可以是已有的文件夹）
+eg:
+mkdir zcm_git_test
+
+2.初始化git仓库
+//先进入到仓库目录
+eg:
+cd /d/zcm/zcm_git_test
+git init
+//此时会生成.git版本库文件
+
+
+3.添加文件到本地仓库
+eg:
+git add zcm_readme   //此时还在暂存区（stage）
+
+4.查看git当前状态
+eg:
+git status
+//会提示你有文件（zcm_readme）修改了但没提交，你可以选择commit或者checkout
+
+5.提交文件到本地仓库(会将所有的add修改都提交)    
+eg:
+git commit -m "版本说明"
+//-m参数是用来设置版本说明，方便查看
+//commit就是把内容提交到当前分支，创建GIT版本库是会自动为我们创建了一个唯一的master分支，git commit就是往master分支上修改
+
+6.查看版本控制的历史记录
+eg:
+git log   //比较详细的记录
+git log --oneline  //只显示了每次的版本变化信息，一次从最新到最原始
+git log --pretty=oneline   //比上一个多了个版本控制号。
+
+7.回退到不同版本
+eg：
+git reset --hard HEAD^    //上一个版本
+git reset --hard HEAD^ ^   //上上一个版本
+git reset --hard HEAD~100   //往上第100个版本
+git reset --hard commit_id  //commit_id为版本号，可以不写全（如果部分救恩能够匹配的话），此命令可以回到任意版本
+git reflog    //查看每次的命令记录，可以看到所有的版本号和版本变更信息
+
+8.查看版本区别（用来跟踪修改）
+eg：
+git diff     
+git diff HEAD
+git diff -- zcm_readme.txt  //查看某个文件的修改区别
+
+9.撤销修改   （试了下都没有效果，还没找到原因）
+eg:
+git checkout -- zcm_readme.txt   //可以回到该文件最近一次add或者commit的状态
+git reset HEAD zcm_readme.tx
+
+10删除文件
+eg：
+rm tt.cpp //会导致工作区和版本库不一致
+git checkout -- tt.cpp //这样可以把直接用用rm误删的文件恢复
+
+git rm tt.cpp //这样就不能恢复文件了，只能会到其他的版本
+
+11.本地仓库和远程仓库是通过SSH加密的，所以需要创建ssh key
+eg:
+ssh-keygen -t rsa -C "yourname@example.com"
+//再在远程端的setting里面找到add ssh key ，把你的users目录下的./ssh/is_rsa.pub内容复制进去即可
+git config –global user.name “Your Name” 
+git config –global user.email “yname@baina.com”
+
+12.添加远程仓库
+eg：
+git remote add origin git@github.com:BruceCC/zcm_git_test.git
+//这是将本地库推送到github远程库的一个例子，BruceCC是我的github账户，添加后远程库的名字就是origin，这是默认叫法也可以改为别的
+
+git push -u origin master  //第一次需要使用-u参数把本地master和远程master关联起来，后面就不用了
+//把本地库中的所有内容推送到远程库上，git push 实际上就是把当前分支master推送到远程上
+
+13.克隆远程仓库
+eg:
+git clone ssh://game-git.baina.com:29418/game-server-exercise   //可以使用不同的协议，例如https
+
+
+14.创建和合并分支
+eg:
+git branch dev    //创建分支dev
+git checkout dev   //切换到分支dev
+git checkout -b dev  //一步完成，创建并切换到分支dev
+git branch   //查看所有分支，带 *的为当前分支
+git merge dev  //合并dev分支到当前分支
+git branch -d dev  //删除分支dev
+
+15.解决冲突
+//当git无法自动合并分支时，，必须首先解决冲突，再提交，合并完成
+eg:
+git log --graph   //查看分支合并图
+
+16.分支管理策略
+//fast forward模式合并，再删除分之后会丢失分支信息，可已禁用这种模式
+//Git就会在merge时生成一个新的commit，这样，从分支历史上就可以看出分支信息。
+eg:
+git merge --no-ff -m "merge with no-ff" fea
+
+17.bug分支
+//需要修复某个分支下的bug但是正在进行的分支工作还没有提交
+//使用stash功能，可以把当前工作现场“储藏”起来，等以后恢复现场后继续工作,
+eg:
+git stash
+//然后再在需要修复bug的分支上创建bug分支，bug解决后切换到此分支并删除bug分支
+
+git stash list //查看刚才的工作现场
+git stash apply stash@{0}  //恢复指定的现场，但不删除stash内容
+git stash pop  //恢复现场，但是会删除stash
+git stash drop //删除stash
+
+18.查看远程库信息
+eg:
+git remote -v //加-v选项可以显示跟详细的信息
+git push origin dev  
+//推送某个分支到远程的origin，推送失败就是因为因为远程的自己的新，此时需要git pull
+//把最新的提交从origin/dev抓下来，然后，在本地合并，解决冲突，再推送
+//git pull也失败了，原因是没有指定本地dev分支与远程origin/dev分支的链接，根据提示，设置dev和origin/dev的链接,然后再pull
+git branch --set-upstream dev origin/dev 
+
+19.标签
+
+//tag就是一个只读的branch，一般为每一个可发布的里程碑版本打一个tag
+
+git tag v1.0  //设置标签，默认是再最新提交的commit上
+git tag    //查看所有标签
+git show v1.0   //查看某个标签的详细信息
+git tag v0.9 6224937  //给任意某次commit打标签，通过git log可以查看每次的commit id
+git tag -a <tagname> -m "blablabla..."可以指定标签信息
+git tag -s <tagname> -m "blablabla..."可以用PGP签名标签
+git tag -d v0.1   //删除标签，标签只会在本地存储，不会自动推送到远程
+git push origin --tag   //一次性推送全部尚未推送到远程的本地标签
+
+//如果标签已经推送到远程，要删除远程标签就麻烦一点，先从本地删除,然后，从远程删除。删除命令也是push
+git push origin --tags
+git push origin :refs/tags/v0.9
+
+
+
+
+
+
+
+
+
