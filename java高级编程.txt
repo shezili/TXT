@@ -218,10 +218,39 @@ Java虚拟机加载类时类加载器的选择
 
 	
 类加载器的委托机制
+	
+   当前ClassLoader首先从自己已经加载的类中查询是否此类已经加载，如果已经加载则直接返回原来已经加载的类。
+
+	1.每个类加载器都有自己的加载缓存，当一个类被加载了以后就会放入缓存，等下次加载的时候就可以直接返回了。
+	2.当前classLoader的缓存中没有找到被加载的类的时候，委托父类加载器去加载，父类加载器采用同样的策略，首先查看自己的缓存，然后委托父类的父类去加载，一直到bootstrp ClassLoader.
+	3.当所有的父类加载器都没有加载的时候，再由当前的类加载器加载，并将其放入它自己的缓存中，以便下次有加载请求的时候直接返回。   
+
    先委托给上级类加载器直到Bootstrap，若其没有加载到类，则往下放，在这个过程中如果加载到则由当前类加载器加载，否则下放到直至发起者加载器，如果还是找不到，则抛出ClassNotFoundException,不再向下寻找。
+
+protected synchronized Class<?> loadClass(String name, boolean resolve)  throws ClassNotFoundException   
+ {  // First, check if the class has already been loaded  Class c = findLoadedClass(name);
+//检查class是否已经被加载过了  if (c == null)
+ {     
+ try {      
+if (parent != null) {         
+ c = parent.loadClass(name, false); //如果没有被加载，且指定了父类加载器，则委托父加载器加载。    
+  } else {        
+  c = findBootstrapClass0(name);//如果没有父类加载器，则委托bootstrap加载器加载      } 
+     } catch (ClassNotFoundException e) {         
+ // If still not found, then invoke findClass in order          
+// to find the class.         
+ c = findClass(name);//如果父类加载没有加载到，则通过自己的findClass来加载。      } 
+ } 
+ if (resolve) 
+{     
+ resolveClass(c); 
+ }  
+return c;
+}
 
 模板方法设计模式：总体流程在父类规定好，流程细节无法确定就空出来留待子类完成
 父类-->loadClass（沿用委托机制）/findClass（覆盖该方法）/得到class文件的二进制数据装换成字节码-->defineClass
+
 // ==========================================================================
 // === 代理
 // ==========================================================================
